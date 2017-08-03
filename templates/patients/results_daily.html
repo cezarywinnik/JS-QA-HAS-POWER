@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+
+
+{% block content %}
+    <div class="page-header">
+        <h1>Daily results <small> {{ date|date:"d F Y" }}</small></h1>
+        <h2>{{ patient.get_full_name }}</h2>
+    </div>
+    <nav>
+      <ul class="pager">
+        <li class="previous">
+            <a href="{% url 'patients:daily_results' patient.id date.year date.month date.day|add:"-1" %}">
+                <span aria-hidden="true">&larr;</span> Previous</a>
+        </li>
+        <li class="next">
+            <a href="{% url 'patients:daily_results' patient.id date.year date.month date.day|add:"1" %}">Next
+                <span aria-hidden="true">&rarr;</span></a></li>
+      </ul>
+    </nav>
+
+    <h2>Physical effort</h2>
+    <div class="row">
+        <div class="col-md-6">
+              <canvas width="500" height="300" id="dailyHrChart"></canvas>
+        </div>
+        <div class="col-md-6">
+            <dl class="dl-horizontal" style="margin: inherit;">
+                <dt >Heart rate average of today:</dt>
+                <dd class="text-uppercase text-{{ hr_status }}">{{ heart_rate }} BPM</dd>
+                <dt>Heart rate average of previous month:</dt>
+                <dd> {{ avg_prev_hr }} BPM</dd>
+            </dl>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+              <canvas width="500" height="300" id="dailyStepsChart"></canvas>
+        </div>
+        <div class="col-md-6">
+            <dl class="dl-horizontal" style="margin: inherit;">
+                <dt>Steps:</dt>
+                <dd>{{ steps }}</dd>
+                <dt>Flights climbed</dt>
+                <dd>{{ flights_climbed }} Floors</dd>
+            </dl>
+        </div>
+    </div>
+
+    <h2>Diet nutrition</h2>
+    <div id="container" style="min-width: 310px; height: 400px; max-width: 500px; margin: 0 0" ></div>
+    <div>
+        <dl>
+            <dt>Fat:</dt>
+            <dd>{{ fat }} g</dd>
+            <dt>Protein:</dt>
+            <dd>{{ protein }} g</dd>
+            <dt>Carbohydrates:</dt>
+            <dd>{{ carbohydrates }} g</dd>
+        </dl>
+    </div>
+
+    <h2>Glucose</h2>
+    {% if status == 'danger' or status == 'warning' %}
+        <p class="text-{{ status }} text-uppercase">You should take a look at this!</p>
+    {% endif %}
+
+    <div class="row">
+        <div class="col-md-6">
+              <canvas width="500" height="300" id="dailyGlucoseChart"></canvas>
+        </div>
+        <div class="col-md-6">
+            <dl class="dl-horizontal" style="margin: inherit;">
+                <dt>Daily average</dt>
+                <dd>{{ glucose_avg }} mg/dL</dd>
+                <dt>Daily minimum</dt>
+                <dd>{{ glucose_min }} mg/dL</dd>
+                <dt>Daily maximim</dt>
+                <dd>{{ glucose_max }} mg/dL</dd>
+                <dt>State</dt>
+                <dd><p class="text-uppercase text-{{ status }}">{{ status }}</p></dd>
+            </dl>
+        </div>
+    </div>
+
+{% endblock %}
+
+
+{% block scripts %}
+
+    <script type="text/javascript">
+        $.get('/api/patients/{{ patient.pk }}/charts/glucose/daily/{{ date.year }}/{{ date.month }}/{{ date.day }}/', function(data) {
+            var ctx = $("#dailyGlucoseChart").get(0).getContext("2d");
+            new Chart(ctx).Line(data);
+        });
+    </script>
+
+    <script type="text/javascript">
+        $.get('/api/patients/{{ patient.pk }}/charts/hr/daily/{{ date.year }}/{{ date.month }}/{{ date.day }}/', function(data) {
+            var ctx = $("#dailyHrChart").get(0).getContext("2d");
+            new Chart(ctx).Line(data);
+        });
+    </script>
+
+    <script type="text/javascript">
+        $.get('/api/patients/{{ patient.pk }}/charts/steps/daily/{{ date.year }}/{{ date.month }}/{{ date.day }}/', function(data) {
+            var ctx = $("#dailyStepsChart").get(0).getContext("2d");
+            new Chart(ctx).Line(data);
+        });
+    </script>
+
+    <script type="text/javascript">
+        window.macros = $.get('/api/patients/{{ patient.pk }}/charts/macros/daily/{{ date.year }}/{{ date.month }}/{{ date.day }}/');
+    </script>
+
+    <script src="https://code.highcharts.com/highcharts.js"></script>
+    <script src="https://code.highcharts.com/modules/exporting.js"></script>
+    <script type="text/javascript">
+
+        $(function () {
+            window.macros.then(function (data) {
+                Highcharts.chart('container', {
+                    chart: {
+                        plotBackgroundColor: null,
+                        plotBorderWidth: null,
+                        plotShadow: false,
+                        type: 'pie'
+                    },
+                    title: {
+                        text: ''
+                    },
+                    tooltip: {
+                        pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
+                    },
+                    plotOptions: {
+                        pie: {
+                            allowPointSelect: true,
+                            cursor: 'pointer',
+                            dataLabels: {
+                                enabled: true,
+                                format: '<b>{point.name}</b>: {point.percentage:.1f} %',
+                                style: {
+                                    color: (Highcharts.theme && Highcharts.theme.contrastTextColor) || 'black'
+                                }
+                            }
+                        }
+                    },
+                    series: [{
+                        name: 'Macro',
+                        colorByPoint: true,
+                        data: data.macros
+                    }]
+                });
+
+            })
+        });
+    </script>
+{% endblock %}

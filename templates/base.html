@@ -1,0 +1,156 @@
+{% load staticfiles %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
+        integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"
+          integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
+          crossorigin="anonymous"></script>
+
+  <title>{% block title %}DiabConrol{% endblock %}</title>
+</head>
+<body>
+<style type="text/css" scoped="scoped">
+    /* Base structure */
+
+    /* Move down content because we have a fixed navbar that is 50px tall */
+    body {
+      padding-top: 50px;
+    }
+
+    /*
+     * Global add-ons
+     */
+
+    .sub-header {
+      padding-bottom: 10px;
+      border-bottom: 1px solid #eee;
+    }
+
+    /*
+     * Top navigation
+     * Hide default border to remove 1px line.
+     */
+    .navbar-fixed-top {
+      border: 0;
+    }
+
+    /* Sidebar */
+
+    /* Hide for mobile, show later */
+    .sidebar {
+      display: none;
+    }
+    @media (min-width: 768px) {
+      .sidebar {
+        position: fixed;
+        top: 51px;
+        bottom: 0;
+        left: 0;
+        z-index: 1000;
+        display: block;
+        padding: 20px;
+        overflow-x: hidden;
+        overflow-y: auto; /* Scrollable contents if viewport is shorter than content. */
+        background-color: #f5f5f5;
+        border-right: 1px solid #eee;
+      }
+    }
+
+    /* Sidebar navigation */
+    .nav-sidebar {
+      margin-right: -21px; /* 20px padding + 1px border */
+      margin-bottom: 20px;
+      margin-left: -20px;
+    }
+    .nav-sidebar > li > a {
+      padding-right: 20px;
+      padding-left: 20px;
+    }
+    .nav-sidebar > .active > a,
+    .nav-sidebar > .active > a:hover,
+    .nav-sidebar > .active > a:focus {
+      color: #fff;
+      background-color: #428bca;
+    }
+
+    /* Main content */
+
+    .main {
+      padding: 20px;
+    }
+    @media (min-width: 768px) {
+      .main {
+        padding-right: 40px;
+        padding-left: 40px;
+      }
+    }
+    .main .page-header {
+      margin-top: 0;
+    }
+</style>
+
+{% block body %}
+    <nav class="navbar navbar-inverse navbar-fixed-top">
+      <div class="container-fluid">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="#">DiabControl</a>
+        </div>
+        <div id="navbar" class="navbar-collapse collapse">
+
+          <ul class="nav navbar-nav navbar-right">
+            {% if request.user.is_authenticated %}
+              <li><a href="{% if request.user.is_superuser %}/admin/{% endif %}" class="navbar-link">{{ request.user.get_full_name }}</a></li>
+              <li><a href="{% url 'accounts:logout' %}">Sign out</a></li>
+            {% else %}
+              <li><a href="{% url 'accounts:login' %}">Sign in</a></li>
+            {% endif %}
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col-sm-3 col-md-2 sidebar">
+        {% if request.user.is_authenticated %}
+          <ul class="nav nav-sidebar">
+          {% if is_doctor %}
+              <li {% if '/patients' in request.path %}class="active"{% endif %}><a href="/patients/index">My patients</a></li>
+              <li {% if '/invitations/index' in request.path %}class="active"{% endif %}><a href="/invitations/index">My invitations</a></li>
+          {% else %}
+              <li {% if '/invitations/index' in request.path %}class="active"{% endif %}><a href="/invitations/index">My invitations</a></li>
+              <li {% if '/invitations/invite' in request.path %}class="active"{% endif %}><a href="/invitations/invite">Invite a doctor</a></li>
+          {% endif %}
+          </ul>
+        {% endif %}
+        </div>
+
+        <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
+            {% block content %}
+                <h1 class="page-header">Welcome to DiabControl system</h1>
+            {% endblock %}
+        </div>
+      </div>
+    </div>
+{% endblock %}
+
+<script type="text/javascript" src="https://code.jquery.com/jquery-1.10.0.min.js"></script>
+<script type="text/javascript" src="{% static 'js/Chart.min.js' %}"></script>
+
+{% block scripts %}
+{% endblock %}
+</body>
+</html>

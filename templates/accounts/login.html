@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% load bootstrap3 %}
+
+{% block content %}
+  <form action="{% url 'accounts:login' %}" method="post" class="form">
+    {% csrf_token %}
+    {% bootstrap_form form %}
+    {% buttons %}
+      <button type="submit" class="btn btn-primary" name="submit">
+        {% bootstrap_icon "star" %} Submit
+      </button>
+    {% endbuttons %}
+  </form>
+  <p>If you don't have an account you can <a href="{% url 'accounts:register' %}">register it there</a>.</p>
+
+  <p>
+  <a href="{% url "social:begin" "google-oauth2" %}">Login with Google</a>
+  </p>
+{% endblock %}
